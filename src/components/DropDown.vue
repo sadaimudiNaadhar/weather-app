@@ -23,7 +23,7 @@ export default {
     return {
       isOpen: false,
       searchTerm: '',
-      options: ['Option 1', 'Option 2', 'Option 3', 'Option 4'] // Your list of options
+      options: ['P1', 'Option 2', 'Option 3', 'Option 4'] // Your list of options
     }
   },
   computed: {
@@ -40,6 +40,7 @@ export default {
     selectOption(option: string) {
       this.searchTerm = option
       this.isOpen = false
+      this.$emit('selected-weather-station', this.searchTerm)
     },
     filterOptions() {
       this.isOpen = true
