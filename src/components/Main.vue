@@ -3,6 +3,7 @@ import type { IWeatherApiResponse, MapCoordinates } from '@/types'
 import { RoadConditionColorCode } from '@/types'
 import DropDown from './DropDown.vue'
 import axios from 'axios'
+import Legend from './Legend.vue'
 
 let options: object[] = [
   { value: '1', text: 'aa' + ' - ' + '1' },
@@ -15,8 +16,9 @@ let options: object[] = [
 
 <template>
   <nav class="navbar navbar-expand-lg bg-body-tertiary">
-    <div class="container-fluid">
-      <a class="navbar-brand" href="#">Weather Stats</a>
+    <div class="container">
+      <a class="navbar-brand" href="#"><i class="bi bi-sunrise"></i> Weather Stats</a>
+
       <button
         class="navbar-toggler"
         type="button"
@@ -28,76 +30,89 @@ let options: object[] = [
       >
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <div class="collapse navbar-collapse" id="navbarSupportedContent"></div>
+      
+      <!-- Todo: Save dark mode data to local storage to persist dark mode -->
+      <div class="form-check form-switch">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          role="switch"
+          id="flexSwitchCheckChecked"
+          :onchange="toggleDarkMode"
+          :checked="checkIfDarkMode()"
+        />
+
+        <label class="form-check-label text-end" for="flexSwitchCheckChecked">Dark Mode</label>
+      </div>
+    </div>
+  </nav>
+  <div class="container mt-4">
+    <div class="row">
+      <!-- <v-select :options="options"></v-select> -->
+      <div class="select-container">
         <DropDown
           @selected-weather-station="updateSelectedWeatherStation"
           :options="options"
           placeholder="Search Weather Station..."
         />
-        <button class="btn btn-outline-success ms-2" @click="submitSearch()">Search</button>
-        <div>
-          <button class="btn-time-period btn btn-primary ms-2" @click="setTime('Now')">Now</button>
-          <button class="btn-time-period btn btn-primary ms-2" @click="setTime('in_3h')">3h</button>
-          <button class="btn-time-period btn btn-primary ms-2" @click="setTime('in_18h')">
-            18h
+        <div class="search-btn-container">
+          <button
+            class="btn btn-outline-success ms-2"
+            @click="submitSearch()"
+            :disabled="!selectedWeatherStation"
+          >
+            <i class="bi bi-send"></i> Search
           </button>
         </div>
       </div>
     </div>
-  </nav>
+  </div>
+  <div class="content-empty" v-if="apiData == null">
+    <p><i class="bi bi-send"></i></p>
+    <p>Search and select weather select station</p>
+  </div>
+  <div class="content container mt-4" v-else>
+    <div class="row text-center">
+      <div class="filter-selector-container mt-2">
+        <div class="time-selector">
+          <i class="bi bi-clock" style="font-size: 1.5rem"></i>
 
-  <div class="container mt-5">
-    <div class="row">
-      <div class="col-md-6">
-        <div class="card" style="max-width: 540px">
-          <div class="row g-0">
-            <div class="col-md-4">
+          <span :class="{ active: 'Now' == selectedTimePeriod }" @click="setTime('Now')">Now</span>
+          <span :class="{ active: 'in_3h' == selectedTimePeriod }" @click="setTime('in_3h')"
+            >Last 3h</span
+          >
+          <span :class="{ active: 'in_18h' == selectedTimePeriod }" @click="setTime('in_18h')"
+            >Last 18h</span
+          >
+        </div>
+      </div>
+      <p class="card-text">
+        <small class="text-body-secondary">Last updated 3 mins ago</small>
+      </p>
+    </div>
+
+    <div class="row mt-5">
+      <div class="col-md-3">
+        <div class="card">
+          <div class="row">
+            <div
+              class="col-md-5"
+              style="justify-content: center; display: flex; align-items: center"
+            >
               <img
                 src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg"
                 alt="clear-day"
                 loading="lazy"
                 class="opNLj"
               />
-              <h1>18 °C</h1>
-              <h2>Monday</h2>
-              <h3>Nov 26</h3>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-7">
               <div class="card-body">
                 <h5 class="card-title">Sunny Day</h5>
-
-                <ul class="list-group" v-if="apiData">
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Wind Speed:
-                    {{ Math.round(apiData.windSpeed?.[selectedTimePeriod.toLowerCase()]) }}
-                    <span class="" style="height: 50px; width: 50px"
-                      ><img
-                        src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/wind.svg"
-                        alt=""
-                    /></span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    Temperature Speed:
-                    {{ Math.round(apiData.temperature?.[selectedTimePeriod.toLowerCase()]) }}
-                    <span class="" style="height: 50px; width: 50px"
-                      ><img
-                        src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg"
-                        alt=""
-                    /></span>
-                  </li>
-                  <!-- <li class="list-group-item d-flex justify-content-between align-items-center">
-                    A third list item
-                    <span class="badge bg-primary rounded-pill">1</span>
-                  </li>
-                  <li class="list-group-item d-flex justify-content-between align-items-center">
-                    A third list item
-                    <span class="badge bg-primary rounded-pill">1</span>
-                  </li> -->
-                </ul>
-
-                <p class="card-text">
-                  <small class="text-body-secondary">Last updated 3 mins ago</small>
-                </p>
+                <h1>18 °C</h1>
+                <h2>Monday</h2>
+                <h3>Nov 26</h3>
               </div>
             </div>
           </div>
@@ -105,104 +120,70 @@ let options: object[] = [
 
         <hr class="d-sm-none" />
       </div>
-      <div class="col-md-6">
-        <div class="row row-cols-1 row-cols-md-3 g-4">
-          <div class="col">
-            <div class="card mb-3" style="max-width: 540px">
-              <div class="row g-0">
-                <div class="col-md-4">
-                  <img
-                    src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg"
-                    alt="clear-day"
-                    loading="lazy"
-                    class="opNLj"
-                  />
-                </div>
-                <div class="col-md-8">
-                  <div class="card-body">
-                    <h5 class="card-title">Card title</h5>
-                    <p class="card-text">
-                      This is a wider card with supporting text below as a natural lead-in to
-                      additional content. This content is a little bit longer.
-                    </p>
-                    <p class="card-text">
-                      <small class="text-body-secondary">Last updated 3 mins ago</small>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="card mb-3" style="max-width: 540px">
-              <div class="row g-0">
-                <div class="col-md-4">
-                  <img
-                    src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg"
-                    alt="clear-day"
-                    loading="lazy"
-                    class="opNLj"
-                  />
-                </div>
-                <div class="col-md-8">
-                  <div class="card-body">
-                    <h5 class="card-title">Card title</h5>
-                    <p class="card-text">
-                      This is a wider card with supporting text below as a natural lead-in to
-                      additional content. This content is a little bit longer.
-                    </p>
-                    <p class="card-text">
-                      <small class="text-body-secondary">Last updated 3 mins ago</small>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col">
-            <div class="card mb-3" style="max-width: 540px">
-              <div class="row g-0">
-                <div class="col-md-4">
-                  <img
-                    src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg"
-                    alt="clear-day"
-                    loading="lazy"
-                    class="opNLj"
-                  />
-                </div>
-                <div class="col-md-8">
-                  <div class="card-body">
-                    <h5 class="card-title">Card title</h5>
-                    <p class="card-text">
-                      This is a wider card with supporting text below as a natural lead-in to
-                      additional content. This content is a little bit longer.
-                    </p>
-                    <p class="card-text">
-                      <small class="text-body-secondary">Last updated 3 mins ago</small>
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+      <div class="col-md-9">
+        <ul class="list-group" v-if="apiData">
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Wind Speed:
+            {{ Math.round(apiData.windSpeed?.[selectedTimePeriod.toLowerCase()]) }}
+            <span class="" style="height: 50px; width: 50px"
+              ><img src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/wind.svg" alt=""
+            /></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Temperature Speed:
+            {{ Math.round(apiData.temperature?.[selectedTimePeriod.toLowerCase()]) }}
+            <span class="" style="height: 50px; width: 50px"
+              ><img src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg" alt=""
+            /></span>
+          </li>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            Temperature Speed:
+            {{ Math.round(apiData.temperature?.[selectedTimePeriod.toLowerCase()]) }}
+            <span class="" style="height: 50px; width: 50px"
+              ><img src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg" alt=""
+            /></span>
+          </li>
+
+          <!-- <li class="list-group-item d-flex justify-content-between align-items-center">
+                       A third list item
+                       <span class="badge bg-primary rounded-pill">1</span>
+                     </li>
+                     <li class="list-group-item d-flex justify-content-between align-items-center">
+                       A third list item
+                       <span class="badge bg-primary rounded-pill">1</span>
+                     </li> -->
+        </ul>
+      </div>
+    </div>
+    <div class="heading mt-3 mb-3">
+      <h3><i class="bi bi-geo-alt"> </i></h3>
+      <div>
+        <div class="legend-container">
+          <Legend
+            v-for="legend in legends"
+            :color="legend.color"
+            :text="legend.text"
+            :key="legend.text"
+          />
         </div>
       </div>
     </div>
-    <div class="row">
-      <div class="col-md-6">
+
+    <div class="row mt-2">
+      <div class="col">
         <div id="map" class="google-map"></div>
 
         <hr class="d-sm-none" />
       </div>
-      <div class="col-md-6">
+      <div class="col">
         <div id="map2" class="google-map"></div>
       </div>
     </div>
   </div>
 
-  <div class="mt-5 p-4 bg-dark text-white text-center">
+  <footer class="mt-5 p-4 bg-dark text-white text-center bg-body-tertiary">
     <p>Footer</p>
-  </div>
+  </footer>
 </template>
 
 <script lang="ts">
@@ -210,6 +191,7 @@ import { Loader } from '@googlemaps/js-api-loader'
 //import { Easing, Tween, update } from '@tweenjs/tween.js'
 import { weatherApiResponse } from '@/MockResponse'
 import type { RoadConditionData } from '@/types'
+
 export default {
   components: {
     DropDown
@@ -223,7 +205,25 @@ export default {
       google: null as any,
       map: null as any,
       roadData: [] as RoadConditionData[],
-      roadMiddleCords: {} as MapCoordinates
+      roadMiddleCords: {} as MapCoordinates,
+      legends: [
+        {
+          color: 'red',
+          text: 'Heavy Snow'
+        },
+        {
+          color: 'green',
+          text: 'No Snow'
+        },
+        {
+          color: 'blue',
+          text: 'Medium Snow'
+        },
+        {
+          color: '#ffff',
+          text: 'White Snow'
+        }
+      ]
     }
   },
   async mounted() {
@@ -235,27 +235,31 @@ export default {
     await this.google.load()
 
     this.setTime(this.selectedTimePeriod)
+    this.checkIfDarkMode()
     //await this.initializeMap(props);
   },
   computed: {},
   methods: {
+    checkIfDarkMode() {
+      const mode = document.documentElement.getAttribute('data-bs-theme')
+      if (mode === 'dark') {
+        return true
+      }
+
+      return false
+    },
+    toggleDarkMode() {
+      if (this.checkIfDarkMode()) {
+        document.documentElement.setAttribute('data-bs-theme', 'light')
+        return
+      }
+      document.documentElement.setAttribute('data-bs-theme', 'dark')
+    },
     updateSelectedWeatherStation(selectedWeatherStation: string) {
       this.selectedWeatherStation = selectedWeatherStation
     },
     setTime(period: string) {
       this.selectedTimePeriod = period // Update the selected item
-
-      // Loop through all the buttons and assign appropriate classes
-      const buttons = document.querySelectorAll('.btn-time-period')
-      buttons.forEach((button) => {
-        if (button.textContent?.toLowerCase() !== period.replace('in_', '').toLowerCase()) {
-          button.classList.remove('btn', 'btn-success')
-          button.classList.add('btn', 'btn-primary')
-        } else {
-          button.classList.remove('btn', 'btn-primary')
-          button.classList.add('btn', 'btn-success')
-        }
-      })
     },
     getMedianCordinate(roadData: RoadConditionData[]) {
       roadData.sort((a, b) => a.lat - b.lat)
@@ -384,5 +388,20 @@ export default {
 .google-map {
   width: 100%;
   height: 400px;
+}
+.legend-container {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.heading h3 {
+  margin: 0;
+  /* border-right: 2px solid #fff;
+  padding-right: 0.5rem; */
 }
 </style>

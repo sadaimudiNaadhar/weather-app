@@ -1,0 +1,55 @@
+{
+    "weatherStationId": "P047",
+    "temperature": {
+        "in_3h": 9,
+        "now": 19,
+        "in_18h": -11
+    },
+    "tauTemperature": {
+        "in_3h": 9,
+        "now": 19,
+        "in_18h": -11
+    },
+    "bTemperature": {
+        "in_3h": 9,
+        "now": 19,
+        "in_18h": -11
+    },
+    "windSpeed": {
+        "in_3h": 9,
+        "now": 19,
+        "in_18h": -11
+    },
+    "weatherStationLocation": {
+        "lat": 50,
+        "lng": 40
+    },
+    "roadData": [
+        {
+            "in_3h": 0,
+            "now": 1,
+            "in_18h": 2,
+            "lat": 37.782551,
+            "lng": -122.445368
+        },
+        {
+            "in_3h": 0,
+            "now": 2,
+            "in_18h": 2,
+            "lat": 37.782745,
+            "lng": -122.444586
+        },
+        {
+            "in_3h": 0,
+            "now": 2,
+            "in_18h": 2,
+            "lat": 37.782842,
+            "lng": -122.443688
+        }
+    ],
+    "weatherCondition": {
+        "in_3h": 0,
+        "now": 1,
+        "in_18h": 2
+    }
+}
