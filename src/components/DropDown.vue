@@ -5,7 +5,7 @@
       v-model="searchTerm"
       @input="filterOptions"
       @click="toggleDropdown"
-      class="form-control"
+      class="form-control bg-body-tertiary bs-dark-text-emphasis"
       :placeholder="placeholder"
     />
     <ul v-show="isOpen" class="dropdown-menu form-control">
