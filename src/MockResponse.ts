@@ -185,7 +185,7 @@ const roadConditionData: RoadConditionData[] = [
   }
 ]
 
-const timeExpresssion = {
+const TimeExpression = {
   in_3h: 9,
   now: 19,
   in_18h: -11
@@ -193,10 +193,10 @@ const timeExpresssion = {
 
 export const weatherApiResponse = {
   weatherStationId: 'P1',
-  temperature: timeExpresssion,
-  tauTemperature: timeExpresssion,
-  bTemperature: timeExpresssion,
-  windSpeed: timeExpresssion,
+  temperature: TimeExpression,
+  tauTemperature: TimeExpression,
+  bTemperature: TimeExpression,
+  windSpeed: TimeExpression,
   weatherStationLocation: {
     lat: 50,
     lng: 40

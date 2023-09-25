@@ -1,17 +1,15 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import Main from './components/Main.vue'
-</script>
-
 <template>
-  <!-- <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink> -->
-
-  <Main />
-
-  <!-- <RouterView /> -->
+  <HomeView />
 </template>
-
+<script lang="ts">
+import HomeView from './views/HomeView.vue'
+export default {
+  name: 'App',
+  components: {
+    HomeView
+  }
+}
+</script>
 <style scoped>
 header {
   line-height: 1.5;

@@ -3,7 +3,7 @@ export interface MapCoordinates {
   lng: number
 }
 
-interface TimeExpresssion {
+interface TimeExpression {
   in_3h: number
   now: number
   in_18h: number
@@ -11,16 +11,16 @@ interface TimeExpresssion {
 
 export interface IWeatherApiResponse {
   weatherStationId: number
-  temperature: TimeExpresssion
-  tauTemperature: TimeExpresssion
-  bTemperature: TimeExpresssion
-  windSpeed: TimeExpresssion
+  temperature: TimeExpression
+  tauTemperature: TimeExpression
+  bTemperature: TimeExpression
+  windSpeed: TimeExpression
   weatherStationLocation: MapCoordinates
   roadData: RoadConditionData[]
-  weatherCondition: TimeExpresssion //STZST
+  weatherCondition: TimeExpression //STZST
 }
 
-export interface RoadConditionData extends TimeExpresssion, MapCoordinates {}
+export interface RoadConditionData extends TimeExpression, MapCoordinates {}
 
 export enum RoadConditionColorCode {
   BAD = '#FF0000',
