@@ -1,11 +1,13 @@
 <template>
   <div class="time-selector">
+    <div class="fs-6 fw-bold">Select Time Period:</div>
     <i class="bi bi-clock" style="font-size: 1.5rem"></i>
 
     <span :class="{ active: 'Now' == selectedTimePeriod }" @click="setTime('Now')">Now</span>
+    <i class="bi bi-clock" style="font-size: 1.5rem"></i>
     <span :class="{ active: 'in_3h' == selectedTimePeriod }" @click="setTime('in_3h')"
       >Last 3h</span
-    >
+    ><i class="bi bi-clock" style="font-size: 1.5rem"></i>
     <span :class="{ active: 'in_18h' == selectedTimePeriod }" @click="setTime('in_18h')"
       >Last 18h</span
     >

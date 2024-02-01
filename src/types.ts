@@ -23,7 +23,18 @@ export interface IWeatherApiResponse {
 export interface RoadConditionData extends TimeExpression, MapCoordinates {}
 
 export enum RoadConditionColorCode {
-  BAD = '#FF0000',
-  GOOD = '#008000',
-  OK = '#000000'
+  GREEN = 'green',
+  LIGHT_BLUE = '#99ccff',
+  VIOLET = 'violet',
+  ORANGE = 'orange',
+  RED = 'red',
+}
+
+export enum RoadCondition {
+  BEST = 0,
+  GOOD = 1,
+  OKAY = 2,
+  BAD = 3,
+  WORST = 4,
+  EXTREME_WORST = 5,
 }

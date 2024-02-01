@@ -4,12 +4,12 @@ const roadConditionData: RoadConditionData[] = [
   {
     in_3h: 0,
     now: 1,
-    in_18h: 2,
+    in_18h: 0,
     lat: 37.782551,
     lng: -122.445368
   },
   {
-    in_3h: 0,
+    in_3h: 1,
     now: 2,
     in_18h: 2,
     lat: 37.782745,

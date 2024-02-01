@@ -2,12 +2,8 @@
   <HeaderComponent />
   <div class="container mt-4">
     <div class="select-container">
-      <v-select
-        placeholder="Select Weather Station"
-        v-model="selectedWeatherStation"
-        :options="['P1', 'Option 2', 'Option 3', 'Option 4']"
-        @option:selected="weatherStationSelected"
-      ></v-select>
+      <v-select placeholder="Select Weather Station" v-model="selectedWeatherStation"
+        :options="weatherStations" @option:selected="weatherStationSelected"></v-select>
     </div>
   </div>
   <div class="content content-empty" v-if="apiData == null || !selectedWeatherStation">
@@ -20,7 +16,7 @@
         <TimeFilter @set-time="setTime" :selectedTimePeriod="selectedTimePeriod" />
       </div>
       <p class="card-text text-end">
-        <small class="text-body-secondary">Last updated 3 mins ago</small>
+        <small class="text-body-secondary">Last updated {{ lastUpdatedTime }} mins ago</small>
       </p>
     </div>
 
@@ -30,21 +26,19 @@
         <hr class="d-sm-none" />
       </div>
       <div class="col-md-9">
-       <WeatherInfoDetail :selected-time-period="selectedTimePeriod" :api-data="apiData"/>
+        <WeatherInfoDetail :selected-time-period="selectedTimePeriod" :api-data="apiData" />
       </div>
     </div>
     <div class="heading mt-3 mb-3">
-      <h3><i class="bi bi-geo-alt"> </i></h3>
-      
-        <div class="legend-container">
-          <LegendComponent
-            v-for="legend in legends"
-            :color="legend.color"
-            :text="legend.text"
-            :key="legend.text"
-          />
-        </div>
-      
+      <h3>
+        <i class="bi bi-geo-alt"> </i>
+        <span class="fs-5"> Weather Station Details </span>
+      </h3>
+
+      <div class="legend-container">
+        <LegendComponent v-for="legend in legends" :color="legend.color" :text="legend.text" :key="legend.text" />
+      </div>
+
     </div>
 
     <div class="row mt-2">
@@ -58,15 +52,15 @@
       </div>
     </div>
   </div>
-  <FooterComponent/>
+  <FooterComponent />
 </template>
 
 <script lang="ts">
 import type { IWeatherApiResponse, MapCoordinates } from '@/types'
-import { RoadConditionColorCode } from '@/types'
+import { RoadCondition, RoadConditionColorCode } from '@/types'
 import axios from 'axios'
 import { Loader } from '@googlemaps/js-api-loader'
-import { weatherApiResponse } from '@/MockResponse'
+//import { weatherApiResponse } from '@/MockResponse'
 import type { RoadConditionData } from '@/types'
 import LegendComponent from '../components/Legend.vue'
 import vSelect from 'vue-select'
@@ -90,48 +84,67 @@ export default {
     return {
       selectedTimePeriod: 'Now',
       selectedWeatherStation: '',
+      weatherStations: [
+        'P1', 'P2', 'P3', 'P4'
+      ],
+      lastUpdateTime: null as any,
+      isUpdatedTime: false as any,
       apiData: null as any,
       //map
       google: null as any,
       map: null as any,
       roadData: [] as RoadConditionData[],
       roadMiddleCords: {} as MapCoordinates,
-      selectedCountry: null,
       legends: [
-        {
-          color: 'red',
-          text: 'Heavy Snow'
-        },
         {
           color: 'green',
           text: 'No Snow'
         },
         {
-          color: 'blue',
+          color: '#99ccff',
+          text: 'Light Snow'
+        },
+        {
+          color: 'violet',
           text: 'Medium Snow'
         },
         {
-          color: '#ffff',
-          text: 'White Snow'
-        }
+          color: 'orange',
+          text: 'High Snow'
+        },
+        {
+          color: 'red',
+          text: 'Heavy Snow'
+        },
       ]
     }
   },
   async mounted() {
     this.google = new Loader({
-      apiKey: 'AIzaSyCkwzRe-yWgV_OgIO6m-MD-R5sknRzMW3A',
+      apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
       version: 'weekly'
     })
     await this.google.load()
     this.setTime(this.selectedTimePeriod)
   },
-  computed: {},
+  computed: {
+    lastUpdatedTime() {
+      // Calculate and return the formatted last updated time
+      return this.isUpdatedTime ? this.calculateLastUpdatedTime() : 0;
+    }
+  },
   methods: {
     weatherStationSelected() {
       this.submitSearch()
+      // Update the lastUpdateTime when an option is selected
+      this.lastUpdateTime = new Date();
+      setInterval(this.calculateLastUpdatedTime, 60000);
     },
     setTime(period: string) {
       this.selectedTimePeriod = period // Update the selected item
+      if (this.roadData.length > 0) {
+        this.initializeMapWithRoadData(this.roadMiddleCords, this.roadData); // Refresh map in UI based on selected time
+      }
     },
     getMedianCordinate(roadData: RoadConditionData[]) {
       roadData.sort((a, b) => a.lat - b.lat)
@@ -150,20 +163,30 @@ export default {
 
       return medianCoordinate
     },
-    onCountryChange() {},
-    async submitSearch() {
-      try {
-        const selectedWeatherStation = this.selectedWeatherStation
-        const response = await axios.post<IWeatherApiResponse>(
-          'https://en3fqjhwcwvas.x.pipedream.net',
-          {
-            // Request payload or data
-            // Replace with your actual data
-            address: '123 Example St, City'
-          }
-        )
+    calculateLastUpdatedTime() {
+      // Calculate the time difference between now and the lastUpdateTime
+      const now = new Date();
+      const timeDifference = now - this.lastUpdateTime;
 
-        response.data = weatherApiResponse as unknown as IWeatherApiResponse
+      // Convert the time difference to minutes
+      const minutes = Math.floor(timeDifference / (1000 * 60));
+
+      this.isUpdatedTime = now;
+
+      return `${minutes}`;
+    },
+    async submitSearch() {
+
+      try {
+        const response = await axios.post<IWeatherApiResponse>(
+          import.meta.env.VITE_WEATHER_API_URL,
+          {
+            STATID: this.selectedWeatherStation
+          }
+        );
+
+        // Uncomment this line to enable Mock API
+        // response.data = weatherApiResponse as unknown as IWeatherApiResponse
 
         this.apiData = response.data
 
@@ -176,15 +199,14 @@ export default {
 
         this.roadMiddleCords = this.getMedianCordinate(this.roadData) as MapCoordinates
 
-        await this.initializeMap(mapData)
-        await this.initializeMap2(this.roadMiddleCords, this.roadData)
+        await this.initializeMapWithWeatherStaionLocation(mapData)
+        await this.initializeMapWithRoadData(this.roadMiddleCords, this.roadData)
 
-        //this.$emit("show-map", response.data.weatherStationLocation as MapCoordinates);
       } catch (error) {
         console.error(error) // Handle any errors that occur during the request
       }
     },
-    async initializeMap(mapCords: MapCoordinates) {
+    async initializeMapWithWeatherStaionLocation(mapCords: MapCoordinates) {
       const latLng = mapCords
 
       const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary
@@ -203,40 +225,51 @@ export default {
         map,
         center: latLng,
         radius: 100 * 100
-      })
+      });
 
       const marker = new google.maps.Marker({
         position: latLng,
         map,
-        title: this.selectedWeatherStation
-      })
+        label: this.selectedWeatherStation,
+        title: 'Weather Station: ' + this.selectedWeatherStation
+      });
 
       cityCircle.setMap(map)
       marker.setMap(map)
     },
-    async initializeMap2(mapCords: MapCoordinates, roadData: RoadConditionData[]) {
+    async initializeMapWithRoadData(mapCords: MapCoordinates, roadData: RoadConditionData[]) {
       const latLng = mapCords
 
       const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary
       const map = new Map(document.getElementById('map2') as HTMLElement, {
         center: latLng,
         zoom: 16,
-        mapId: '15431d2b469f209e'
+        mapId: '15431d2b469f209e' //Map without labels
       })
 
       for (let i = 0; i < roadData.length - 1; i++) {
-        let strokeColor = RoadConditionColorCode.OK
+        let strokeColor;
 
-        if (roadData[i][this.selectedTimePeriod.toLowerCase()] == 0) {
-          strokeColor = RoadConditionColorCode.OK
-        }
-
-        if (roadData[i][this.selectedTimePeriod.toLowerCase()] == 1) {
-          strokeColor = RoadConditionColorCode.GOOD
-        }
-
-        if (roadData[i][this.selectedTimePeriod.toLowerCase()] == 2) {
-          strokeColor = RoadConditionColorCode.BAD
+        switch (roadData[i][this.selectedTimePeriod.toLowerCase()]) {
+          case RoadCondition.BEST:
+            strokeColor = RoadConditionColorCode.GREEN;
+            break;
+          case RoadCondition.GOOD:
+            strokeColor = RoadConditionColorCode.LIGHT_BLUE;
+            break;
+          case RoadCondition.OKAY:
+            strokeColor = RoadConditionColorCode.VIOLET;
+            break;
+          case RoadCondition.BAD:
+            strokeColor = RoadConditionColorCode.ORANGE;
+            break;
+          case RoadCondition.WORST:
+          case RoadCondition.EXTREME_WORST:
+            strokeColor = RoadConditionColorCode.RED;
+            break;
+          default:
+            strokeColor = RoadConditionColorCode.VIOLET;
+            break;
         }
 
         const flightPath = new google.maps.Polyline({
@@ -262,19 +295,9 @@ export default {
   width: 100%;
   height: 400px;
 }
+
 .legend-container {
   display: flex;
   gap: 1.2rem;
 }
-
-
 </style>
-<!-- <script setup lang="ts">
- let options: object[] = [
-   { value: '1', text: 'aa' + ' - ' + '1' },
-   { value: '2', text: 'ab' + ' - ' + '2' },
-   { value: '3', text: 'bc' + ' - ' + '3' },
-   { value: '4', text: 'cd' + ' - ' + '4' },
-   { value: '5', text: 'de' + ' - ' + '5' }
- ]
- </script> -->
