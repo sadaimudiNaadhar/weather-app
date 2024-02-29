@@ -27,7 +27,7 @@ export enum RoadConditionColorCode {
   LIGHT_BLUE = '#99ccff',
   VIOLET = 'violet',
   ORANGE = 'orange',
-  RED = 'red',
+  RED = 'red'
 }
 
 export enum RoadCondition {
@@ -36,5 +36,5 @@ export enum RoadCondition {
   OKAY = 2,
   BAD = 3,
   WORST = 4,
-  EXTREME_WORST = 5,
+  EXTREME_WORST = 5
 }

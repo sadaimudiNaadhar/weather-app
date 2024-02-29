@@ -14,10 +14,9 @@ footer {
   bottom: 0;
   left: 0; */
   width: 100%;
-  background:  var(--bs-secondary-bg);
+  background: var(--bs-secondary-bg);
   border: none;
   color: var(--bs-heading-color);
-
 
   /* background-color: orange;
     position: absolute;

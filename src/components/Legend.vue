@@ -15,14 +15,13 @@ export default {
 </script>
 
 <style scoped>
-.legend{
-    display: flex;
-    gap: 0.4rem;
-    align-items: center;
-
+.legend {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
 }
 
-.color-code{
-    border: 1.5px solid;
+.color-code {
+  border: 1.5px solid;
 }
 </style>

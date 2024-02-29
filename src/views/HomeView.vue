@@ -2,53 +2,61 @@
   <HeaderComponent />
   <div class="container mt-4">
     <div class="select-container">
-      <v-select placeholder="Select Weather Station" v-model="selectedWeatherStation"
-        :options="weatherStations" @option:selected="weatherStationSelected"></v-select>
+      <v-select
+        placeholder="Select Weather Station"
+        v-model="selectedWeatherStation"
+        :options="weatherStations"
+        @option:selected="weatherStationSelected"
+      ></v-select>
     </div>
   </div>
   <div class="content content-empty" v-if="apiData == null || !selectedWeatherStation">
     <p><i class="bi bi-send"></i></p>
     <p>Search and select weather station</p>
   </div>
-  <div class="content container" v-else>
-    <div class="row ">
-      <div class="filter-selector-container mt-2">
-        <TimeFilter @set-time="setTime" :selectedTimePeriod="selectedTimePeriod" />
+  <div class="content container">
+    <div class="wrapper" v-if="apiData != null">
+      <div class="row">
+        <div class="filter-selector-container mt-2">
+          <TimeFilter @set-time="setTime" :selectedTimePeriod="selectedTimePeriod" />
+        </div>
+        <p class="card-text text-end">
+          <small class="text-body-secondary">Last updated {{ lastUpdatedTime }} mins ago</small>
+        </p>
       </div>
-      <p class="card-text text-end">
-        <small class="text-body-secondary">Last updated {{ lastUpdatedTime }} mins ago</small>
-      </p>
+
+      <div class="row mt-2">
+        <div class="col-md-3">
+          <WeatherInfo />
+          <hr class="d-sm-none" />
+        </div>
+        <div class="col-md-9">
+          <WeatherInfoDetail :selected-time-period="selectedTimePeriod" :api-data="apiData" />
+        </div>
+      </div>
+      <div class="heading mt-3 mb-3">
+        <h3>
+          <i class="bi bi-geo-alt"> </i>
+          <span class="fs-5"> Weather Station Details </span>
+        </h3>
+
+        <div class="legend-container">
+          <LegendComponent
+            v-for="legend in legends"
+            :color="legend.color"
+            :text="legend.text"
+            :key="legend.text"
+          />
+        </div>
+      </div>
     </div>
-
-    <div class="row mt-2">
-      <div class="col-md-3">
-        <WeatherInfo />
-        <hr class="d-sm-none" />
-      </div>
-      <div class="col-md-9">
-        <WeatherInfoDetail :selected-time-period="selectedTimePeriod" :api-data="apiData" />
-      </div>
-    </div>
-    <div class="heading mt-3 mb-3">
-      <h3>
-        <i class="bi bi-geo-alt"> </i>
-        <span class="fs-5"> Weather Station Details </span>
-      </h3>
-
-      <div class="legend-container">
-        <LegendComponent v-for="legend in legends" :color="legend.color" :text="legend.text" :key="legend.text" />
-      </div>
-
-    </div>
-
     <div class="row mt-2">
       <div class="col">
-        <div id="map" class="google-map"></div>
-
+        <div id="weatherLocationMap" class="map-ui"></div>
         <hr class="d-sm-none" />
       </div>
       <div class="col">
-        <div id="map2" class="google-map"></div>
+        <div id="roadConditionMap" class="map-ui"></div>
       </div>
     </div>
   </div>
@@ -59,7 +67,6 @@
 import type { IWeatherApiResponse, MapCoordinates } from '@/types'
 import { RoadCondition, RoadConditionColorCode } from '@/types'
 import axios from 'axios'
-import { Loader } from '@googlemaps/js-api-loader'
 //import { weatherApiResponse } from '@/MockResponse'
 import type { RoadConditionData } from '@/types'
 import LegendComponent from '../components/Legend.vue'
@@ -67,8 +74,11 @@ import vSelect from 'vue-select'
 import HeaderComponent from '../components/Header.vue'
 import WeatherInfo from '../components/WeatherInfo.vue'
 import TimeFilter from '../components/TimeFilter.vue'
-import WeatherInfoDetail from "../components/WeatherInfoDetail.vue"
-import FooterComponent from "../components/Footer.vue"
+import WeatherInfoDetail from '../components/WeatherInfoDetail.vue'
+import FooterComponent from '../components/Footer.vue'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import { weatherApiResponse } from '@/MockResponse'
 
 export default {
   components: {
@@ -84,9 +94,7 @@ export default {
     return {
       selectedTimePeriod: 'Now',
       selectedWeatherStation: '',
-      weatherStations: [
-        'P1', 'P2', 'P3', 'P4'
-      ],
+      weatherStations: ['P1', 'P2', 'P3', 'P4'],
       lastUpdateTime: null as any,
       isUpdatedTime: false as any,
       apiData: null as any,
@@ -115,35 +123,30 @@ export default {
         {
           color: 'red',
           text: 'Heavy Snow'
-        },
+        }
       ]
     }
   },
   async mounted() {
-    this.google = new Loader({
-      apiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
-      version: 'weekly'
-    })
-    await this.google.load()
     this.setTime(this.selectedTimePeriod)
   },
   computed: {
     lastUpdatedTime() {
       // Calculate and return the formatted last updated time
-      return this.isUpdatedTime ? this.calculateLastUpdatedTime() : 0;
+      return this.isUpdatedTime ? this.calculateLastUpdatedTime() : 0
     }
   },
   methods: {
     weatherStationSelected() {
       this.submitSearch()
       // Update the lastUpdateTime when an option is selected
-      this.lastUpdateTime = new Date();
-      setInterval(this.calculateLastUpdatedTime, 60000);
+      this.lastUpdateTime = new Date()
+      setInterval(this.calculateLastUpdatedTime, 60000)
     },
     setTime(period: string) {
       this.selectedTimePeriod = period // Update the selected item
       if (this.roadData.length > 0) {
-        this.initializeMapWithRoadData(this.roadMiddleCords, this.roadData); // Refresh map in UI based on selected time
+        this.initializeMapWithRoadData(this.roadMiddleCords, this.roadData) // Refresh map in UI based on selected time
       }
     },
     getMedianCordinate(roadData: RoadConditionData[]) {
@@ -165,28 +168,27 @@ export default {
     },
     calculateLastUpdatedTime() {
       // Calculate the time difference between now and the lastUpdateTime
-      const now = new Date();
-      const timeDifference = now - this.lastUpdateTime;
+      const now = new Date()
+      const timeDifference = now - this.lastUpdateTime
 
       // Convert the time difference to minutes
-      const minutes = Math.floor(timeDifference / (1000 * 60));
+      const minutes = Math.floor(timeDifference / (1000 * 60))
 
-      this.isUpdatedTime = now;
+      this.isUpdatedTime = now
 
-      return `${minutes}`;
+      return `${minutes}`
     },
     async submitSearch() {
-
       try {
         const response = await axios.post<IWeatherApiResponse>(
           import.meta.env.VITE_WEATHER_API_URL,
           {
             STATID: this.selectedWeatherStation
           }
-        );
+        )
 
         // Uncomment this line to enable Mock API
-        // response.data = weatherApiResponse as unknown as IWeatherApiResponse
+        response.data = weatherApiResponse as unknown as IWeatherApiResponse
 
         this.apiData = response.data
 
@@ -199,91 +201,80 @@ export default {
 
         this.roadMiddleCords = this.getMedianCordinate(this.roadData) as MapCoordinates
 
-        await this.initializeMapWithWeatherStaionLocation(mapData)
-        await this.initializeMapWithRoadData(this.roadMiddleCords, this.roadData)
-
+        this.initializeMapWithWeatherStaionLocation(mapData)
+        this.initializeMapWithRoadData(this.roadMiddleCords, this.roadData)
       } catch (error) {
         console.error(error) // Handle any errors that occur during the request
       }
     },
     async initializeMapWithWeatherStaionLocation(mapCords: MapCoordinates) {
-      const latLng = mapCords
+      const latLng = [mapCords.lat, mapCords.lng] as L.LatLngExpression
 
-      const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary
-      const map = new Map(document.getElementById('map') as HTMLElement, {
-        center: latLng,
-        zoom: 8
-      })
+      const map = L.map('weatherLocationMap').setView(latLng, 12)
 
-      // Add the circle for this city to the map.
-      const cityCircle = new google.maps.Circle({
-        strokeColor: '#FF0000',
-        strokeOpacity: 0.8,
-        strokeWeight: 2,
-        fillColor: '#FF0000',
-        fillOpacity: 0.35,
-        map,
-        center: latLng,
-        radius: 100 * 100
-      });
+      // Set up the tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map)
 
-      const marker = new google.maps.Marker({
-        position: latLng,
-        map,
-        label: this.selectedWeatherStation,
-        title: 'Weather Station: ' + this.selectedWeatherStation
-      });
+      //Add a circle for the weather station location
+      // L.circle(latLng, {
+      //   color: '#FF0000',
+      //   fillColor: '#FF0000',
+      //   fillOpacity: 0.17,
+      //   radius: 1000 // Adjust as necessary
+      // }).addTo(map);
 
-      cityCircle.setMap(map)
-      marker.setMap(map)
+      // Add a marker with a label for the weather station
+      L.marker(latLng)
+        .addTo(map)
+        .bindPopup('Weather Station: ' + this.selectedWeatherStation)
+        .openPopup()
     },
     async initializeMapWithRoadData(mapCords: MapCoordinates, roadData: RoadConditionData[]) {
-      const latLng = mapCords
-
-      const { Map } = (await google.maps.importLibrary('maps')) as google.maps.MapsLibrary
-      const map = new Map(document.getElementById('map2') as HTMLElement, {
-        center: latLng,
-        zoom: 16,
-        mapId: '15431d2b469f209e' //Map without labels
-      })
+      const map = L.map('roadConditionMap').setView([mapCords.lat, mapCords.lng], 15)
+      // Set up the tile layer
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map)
 
       for (let i = 0; i < roadData.length - 1; i++) {
-        let strokeColor;
+        let strokeColor
 
         switch (roadData[i][this.selectedTimePeriod.toLowerCase()]) {
           case RoadCondition.BEST:
-            strokeColor = RoadConditionColorCode.GREEN;
-            break;
+            strokeColor = RoadConditionColorCode.GREEN
+            break
           case RoadCondition.GOOD:
-            strokeColor = RoadConditionColorCode.LIGHT_BLUE;
-            break;
+            strokeColor = RoadConditionColorCode.LIGHT_BLUE
+            break
           case RoadCondition.OKAY:
-            strokeColor = RoadConditionColorCode.VIOLET;
-            break;
+            strokeColor = RoadConditionColorCode.VIOLET
+            break
           case RoadCondition.BAD:
-            strokeColor = RoadConditionColorCode.ORANGE;
-            break;
+            strokeColor = RoadConditionColorCode.ORANGE
+            break
           case RoadCondition.WORST:
           case RoadCondition.EXTREME_WORST:
-            strokeColor = RoadConditionColorCode.RED;
-            break;
+            strokeColor = RoadConditionColorCode.RED
+            break
           default:
-            strokeColor = RoadConditionColorCode.VIOLET;
-            break;
+            strokeColor = RoadConditionColorCode.VIOLET
+            break
         }
 
-        const flightPath = new google.maps.Polyline({
-          path: [
-            { lat: roadData[i].lat, lng: roadData[i].lng },
-            { lat: roadData[i + 1].lat, lng: roadData[i + 1].lng }
-          ],
-          geodesic: true,
-          strokeColor: strokeColor,
-          strokeOpacity: 5.0,
-          strokeWeight: 5
-        })
+        const latlngs = [
+          [roadData[i].lat, roadData[i].lng],
+          [roadData[i + 1].lat, roadData[i + 1].lng]
+        ] as L.LatLngExpression[]
 
-        flightPath.setMap(map)
+        L.polyline(latlngs, {
+          color: strokeColor,
+          opacity: 1.0,
+          weight: 5
+        }).addTo(map)
       }
     }
   }
@@ -291,7 +282,7 @@ export default {
 </script>
 
 <style scoped>
-.google-map {
+.map-ui {
   width: 100%;
   height: 400px;
 }

@@ -198,8 +198,9 @@ export const weatherApiResponse = {
   bTemperature: TimeExpression,
   windSpeed: TimeExpression,
   weatherStationLocation: {
-    lat: 50,
-    lng: 40
+    // Berlin
+    lat: 52.520008,
+    lng: 13.404954
   },
   roadData: roadConditionData,
   weatherCondition: {
