@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card w-info">
     <!-- <div class="col-md-5" style="justify-content: center; display: flex; align-items: center">
         <img
           src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/clear-day.svg"
@@ -41,11 +41,13 @@ export default {
       const now = new Date()
 
       // Format the date
-      const options = { weekday: 'short', month: 'short', day: 'numeric' }
+      const options: any = { weekday: 'short', month: 'short', day: 'numeric' }
       this.formattedDate = now.toLocaleDateString('en-US', options)
 
       // Format the time in 24-hour format without seconds
-      const timeOptions = { hour: 'numeric', minute: 'numeric' }
+      //const timeOptions = { hour: 'numeric', minute: 'numeric' }
+
+      const timeOptions: any = { hour: 'numeric', minute: 'numeric' }
       this.formattedTime = now.toLocaleTimeString('en-US', timeOptions)
     }
   }

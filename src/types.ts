@@ -20,7 +20,9 @@ export interface IWeatherApiResponse {
   weatherCondition: TimeExpression //STZST
 }
 
-export interface RoadConditionData extends TimeExpression, MapCoordinates {}
+export interface RoadConditionData extends TimeExpression, MapCoordinates {
+  [key: string]: string | number | undefined
+}
 
 export enum RoadConditionColorCode {
   GREEN = 'green',

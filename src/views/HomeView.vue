@@ -52,7 +52,7 @@
     </div>
     <div class="row mt-2">
       <div class="col">
-        <div id="weatherLocationMap" class="map-ui"></div>
+        <div id="weatherStationLocationMap" class="map-ui"></div>
         <hr class="d-sm-none" />
       </div>
       <div class="col">
@@ -78,7 +78,6 @@ import WeatherInfoDetail from '../components/WeatherInfoDetail.vue'
 import FooterComponent from '../components/Footer.vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { weatherApiResponse } from '@/MockResponse'
 
 export default {
   components: {
@@ -95,7 +94,7 @@ export default {
       selectedTimePeriod: 'Now',
       selectedWeatherStation: '',
       weatherStations: ['P1', 'P2', 'P3', 'P4'],
-      lastUpdateTime: null as any,
+      lastUpdateTime: null as unknown as Date,
       isUpdatedTime: false as any,
       apiData: null as any,
       //map
@@ -169,7 +168,7 @@ export default {
     calculateLastUpdatedTime() {
       // Calculate the time difference between now and the lastUpdateTime
       const now = new Date()
-      const timeDifference = now - this.lastUpdateTime
+      const timeDifference = now.getTime() - new Date(this.lastUpdateTime).getTime()
 
       // Convert the time difference to minutes
       const minutes = Math.floor(timeDifference / (1000 * 60))
@@ -191,14 +190,8 @@ export default {
         //response.data = weatherApiResponse as unknown as IWeatherApiResponse
 
         this.apiData = response.data
-
-        // const { latitude, longitude } = response.data;
-        // console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-
         const mapData = response.data.weatherStationLocation as MapCoordinates
-
         this.roadData = response.data.roadData
-
         this.roadMiddleCords = this.getMedianCordinate(this.roadData) as MapCoordinates
 
         this.initializeMapWithWeatherStaionLocation(mapData)
@@ -210,7 +203,7 @@ export default {
     async initializeMapWithWeatherStaionLocation(mapCords: MapCoordinates) {
       const latLng = [mapCords.lat, mapCords.lng] as L.LatLngExpression
 
-      const map = L.map('weatherLocationMap').setView(latLng, 12)
+      const map = L.map('weatherStationLocationMap').setView(latLng, 12)
 
       // Set up the tile layer
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -242,8 +235,9 @@ export default {
 
       for (let i = 0; i < roadData.length - 1; i++) {
         let strokeColor
+        const roadCondition = roadData[i][this.selectedTimePeriod.toLowerCase()]
 
-        switch (roadData[i][this.selectedTimePeriod.toLowerCase()]) {
+        switch (roadCondition) {
           case RoadCondition.BEST:
             strokeColor = RoadConditionColorCode.GREEN
             break

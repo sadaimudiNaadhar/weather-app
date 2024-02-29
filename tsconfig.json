@@ -2,6 +2,7 @@
   "compilerOptions": {
     "types": [
       "node",
+      "vitest/globals"
       // Other types you may have
     ]
   },

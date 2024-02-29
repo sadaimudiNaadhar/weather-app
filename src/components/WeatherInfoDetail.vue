@@ -1,5 +1,5 @@
 <template>
-  <ul class="list-group" v-if="apiData">
+  <ul class="list-group weatherinfo-detail" v-if="apiData">
     <li class="list-group-item d-flex align-items-center">
       <span class="" style="height: 50px; width: 50px">
         <img src="https://bmcdn.nl/assets/weather-icons/v3.0/fill/svg/wind.svg" alt="" /> </span
