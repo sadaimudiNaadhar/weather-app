@@ -188,7 +188,7 @@ export default {
         )
 
         // Uncomment this line to enable Mock API
-        response.data = weatherApiResponse as unknown as IWeatherApiResponse
+        //response.data = weatherApiResponse as unknown as IWeatherApiResponse
 
         this.apiData = response.data
 
